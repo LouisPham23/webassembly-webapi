@@ -1,0 +1,14 @@
+﻿<div class="mb-3">
+    <label for="@Label" class="form-label">@Label</label>
+    <div class="mb-3">
+        @Control
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Label { get; set; }
+
+    [Parameter]
+    public RenderFragment Control { get; set; }
+}
