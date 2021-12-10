@@ -12,6 +12,8 @@ namespace WEB_API.Services
             _repo = bookRepository;
         }
 
+        public event Action BooksChanged;
+
         public async Task<Book> CreateBook(Book book)
         {
             var newBook = await _repo.CreateBook(book);

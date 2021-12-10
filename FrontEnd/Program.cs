@@ -12,6 +12,10 @@ builder.Services.AddHttpClient<IBookService, FrontEnd.Services.BookService>(clie
 {
     client.BaseAddress = new Uri("https://localhost:7295/");
 });
+builder.Services.AddHttpClient<IGenreService, FrontEnd.Services.GenreService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7295/");
+});
 //builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
 await builder.Build().RunAsync();

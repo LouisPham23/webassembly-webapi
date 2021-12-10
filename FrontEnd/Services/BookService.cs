@@ -7,6 +7,8 @@ namespace FrontEnd.Services
     public class BookService : IBookService
     {
         private readonly HttpClient httpClient;
+        public List<Book> Books { get; set; } = new List<Book>();
+        public event Action BooksChanged;
 
         public BookService(HttpClient httpClient)
         {
@@ -23,9 +25,25 @@ namespace FrontEnd.Services
             await httpClient.DeleteAsync($"/api/books/{id}");
         }
 
-        public async Task<Book> GetBookById(int id)
+        public async Task<Book?> GetBookById(int id)
         {
-            return await httpClient.GetFromJsonAsync<Book>($"/api/books/{id}");
+            HttpResponseMessage response = await httpClient.GetAsync($"/api/books/{id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine(response.StatusCode.ToString());
+                var book = response.Content.ReadFromJsonAsync<Book>().Result;
+                return book;
+            }
+            else
+            {
+                // problems handling here
+                Console.WriteLine(
+                    "Error occurred, the status code is: {0}",
+                    response.StatusCode
+                );
+                return null;
+            }
         }
 
         public async Task<List<Book>> GetBooks()
@@ -37,7 +55,6 @@ namespace FrontEnd.Services
         {
             var result = await httpClient.PutAsJsonAsync("/api/books", updatedBook);
             var newBook = await result.Content.ReadFromJsonAsync<Book>();
-            //Onchange.Invoke();
             return newBook;
         }
     }

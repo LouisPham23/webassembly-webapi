@@ -1,0 +1,88 @@
+﻿@page "/book-details/{id:int}"
+@using WEB_API.Entities
+
+@if (Book == null)
+{
+    <p>Book is not found</p>
+}
+else
+{
+    <div class="card" style="width: 18rem;">
+        <div class="card-body">
+            <h5 class="card-title">@Book.Title</h5>
+            <p class="card-text">@Book.Description</p>
+            <p class="card-text">@Book.Author</p>
+            @*<button class="oi oi-delete btn btn-danger" @onclick="(DeleteBook())"></button>*@
+            @*<button class="oi oi-pencil btn btn-primary" @onclick="(EditBook())"></button>*@
+            <a href="/books" class="oi oi-chevron-left btn btn-secondary"></a>
+            <button class="oi oi-pencil btn btn-primary"></button>
+            <button class="oi oi-delete btn btn-danger"></button>
+        </div>
+    </div>
+}
+
+@if (isEdit)
+{
+    <div class="mt-5">
+        <h4>Edit a book </h4>
+        <EditForm Model="@editBook" OnValidSubmit="@HandleEditSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <FieldComponent Label="Title">
+                <Control>
+                    <InputText id="title" class="form-control" @bind-Value="editBook.Title" />
+                </Control>
+            </FieldComponent>
+            <FieldComponent Label="Description">
+                <Control>
+                    <InputText id="description" class="form-control" @bind-Value="editBook.Description" />
+                </Control>
+            </FieldComponent>
+            <FieldComponent Label="Title">
+                <Control>
+                    <InputText id="author" class="form-control" @bind-Value="editBook.Author" />
+                </Control>
+            </FieldComponent>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </EditForm>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    public Book Book;
+
+    [Inject]
+    public IBookService BookService { get; set; }
+
+    //Edit book
+    public bool isEdit = false;
+    private Book editBook = new Book();
+
+    //Error handling
+    protected async override Task OnInitializedAsync()
+    {
+        Book = await BookService.GetBookById(id: Id);
+    }
+    private async void DeleteBook(int id)
+    {
+        await BookService.DeleteBook(Book.Id);
+        StateHasChanged();
+    }
+
+    private async void EditBook(int id)
+    {
+        isEdit = true;
+        editBook = await BookService.GetBookById(Book.Id);
+        StateHasChanged();
+    }
+
+    private async void HandleEditSubmit()
+    {
+        await BookService.UpdateBook(editBook);
+        isEdit = false;
+        StateHasChanged();
+    }
+}

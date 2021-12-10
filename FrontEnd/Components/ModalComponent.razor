@@ -1,0 +1,125 @@
+﻿@using Data.Entities
+@using WEB_API.Entities
+<div class="modal fade show" id="myModal" style="display:block; background-color: rgba(10,10,10,.8);" aria-modal="true" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content p-5">
+            @if (isEdit == false)
+            {
+                <div class="modal-header">
+                    <h4 class="modal-title">@BookModal.Title</h4>
+                </div>
+                <div class="modal-body">
+                    <p>@BookModal.Description</p>
+                    <p>@BookModal.Author</p>
+                </div>
+
+            }
+
+            @if (isEdit)
+            {
+                <EditForm Model="@BookModal">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <FieldComponent Label="Title">
+                        <Control>
+                            <InputText id="title" class="form-control" @bind-Value="BookModal.Title" />
+                        </Control>
+                    </FieldComponent>
+                    <FieldComponent Label="Description">
+                        <Control>
+                            <InputText id="description" class="form-control" @bind-Value="BookModal.Description" />
+                        </Control>
+                    </FieldComponent>
+                    <FieldComponent Label="Author">
+                        <Control>
+                            <InputText id="author" class="form-control" @bind-Value="BookModal.Author" />
+                        </Control>
+                    </FieldComponent>
+                    <div>
+                        <p>Selected genre: @SelectedGenreType</p>
+                        <InputSelect @bind-Value="SelectedGenreType" class="form-select">
+                            @foreach (var item in Genres)
+                            {
+                            <option value="@item.Name">@item.Name</option>
+                            }
+                    </InputSelect>
+                    </div>
+                <button type="submit" class="btn btn-primary" @onclick="@SaveBook">Save</button>
+            </EditForm>
+            }
+
+            <div class="modal-footer">
+                @switch (DialogType)
+                {
+                    case ModalDialogType.Ok:
+                        <button type="button" class="btn btn-primary" @onclick=@ModalOk>OK</button>
+                        break;
+                    case ModalDialogType.OkCancel:
+                        <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick=@ModalOk>OK</button>
+                        break;
+                    case ModalDialogType.DeleteCancel:
+                        <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="@ModalEdit">Edit</button>
+                        <button type="button" class="btn btn-danger" @onclick=@ModalOk>Delete</button>
+                        break;
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Book BookModal { get; set; }
+
+    [Inject]
+    public IGenreService GenreService { get; set; }
+
+    private string SelectedGenreType;
+    public List<Genre> Genres { get; set; } = new List<Genre>();
+
+    [Parameter]
+    public EventCallback<bool> OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback<Book> OnEdit { get; set; }
+
+    [Parameter]
+    public ModalDialogType DialogType { get; set; }
+
+    private bool isEdit { get; set; } = false;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Genres = await GenreService.GetGenres();
+    }
+
+    private Task SaveBook()
+    {
+        isEdit = false;
+        StateHasChanged();
+        return OnEdit.InvokeAsync(BookModal);
+    }
+
+    private void ModalEdit()
+    {
+        isEdit = true;
+    }
+    private Task ModalCancel()
+    {
+        return OnClose.InvokeAsync(false);
+    }
+
+    private Task ModalOk()
+    {
+        return OnClose.InvokeAsync(true);
+    }
+
+    public enum ModalDialogType
+    {
+        Ok,
+        OkCancel,
+        DeleteCancel
+    }
+}

@@ -1,4 +1,6 @@
 using Data;
+using Data.Repositories;
+using Data.Services;
 using Microsoft.EntityFrameworkCore;
 using WEB_API;
 using WEB_API.Repositories;
@@ -21,6 +23,8 @@ builder.Services.AddDbContext<BookContext>(options =>
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 builder.Services.AddScoped<IBookService, BookService>();
 
+builder.Services.AddScoped<IGenreRepository, GenreRepository>();
+builder.Services.AddScoped<IGenreService, GenreService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

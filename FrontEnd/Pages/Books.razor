@@ -1,9 +1,20 @@
-﻿@page "/books"
-@using System.Net.Http
-@using Data
-@using WEB_API.Entities
-
+﻿
 <h3>Books</h3>
+
+<h4>Books selected: @BooksSelectedCount</h4>
+@if (booksSelected == null || booksSelected.Count == 0)
+{
+    <p>No books selected</p>
+}
+else
+{
+    @foreach (var item in booksSelected)
+    {
+        <span class="me-4">@item.Title</span>
+    }
+
+}
+
 @if (books == null)
 {
     <h1>Loading...</h1>
@@ -18,49 +29,37 @@ else
     <table class="table table-striped">
         <thead>
             <tr>
+                <td>Id</td>
                 <td>Title</td>
-
                 <td>Author</td>
                 <td>Description</td>
+                <td>Delete book</td>
             </tr>
         </thead>
         <tbody>
             @foreach (var item in books)
             {
                 <tr>
+                    <td><a href=@($"/book-details/{item.Id}")>@item.Id</a></td>
                     <td>@item.Title</td>
                     <td>@item.Author</td>
                     <td>@item.Description</td>
-                    <button class="oi oi-delete btn btn-danger" @onclick="(() => DeleteBook(item.Id))"></button>
-                    <button class="oi oi-pencil btn btn-primary" @onclick="(() => EditBook(item.Id))"></button>
+                    <button class="oi oi-delete btn btn-danger" @onclick="(() => OpenDialog(item))"></button>
+                    <td><input type="checkbox" @onchange="eventArgs => { CheckboxClicked(item, eventArgs); }" /></td>
+                    @*        <button class="oi oi-pencil btn btn-primary" @onclick="(() => EditBook(item.Id))"></button>*@
                 </tr>
             }
         </tbody>
     </table>
 }
-<div class="mt-4">
-    <h4>Add a book </h4>
-    <EditForm Model="@newBook" OnValidSubmit="@HandleAddSubmit">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-        <FieldComponent Label="Title">
-            <Control>
-                <InputText id="title" class="form-control" @bind-Value="newBook.Title" />
-            </Control>
-        </FieldComponent>
-        <FieldComponent Label="Description">
-            <Control>
-                <InputText id="description" class="form-control" @bind-Value="newBook.Description" />
-            </Control>
-        </FieldComponent>
-        <FieldComponent Label="Title">
-            <Control>
-                <InputText id="author" class="form-control" @bind-Value="newBook.Author" />
-            </Control>
-        </FieldComponent>
-        <button type="submit" class="btn btn-success">Submit</button>
-    </EditForm>
-</div>
+
+
+
+@if (CloseDialog)
+{
+    <ModalComponent BookModal="book" OnClose="OnCloseDialog" DialogType="ModalComponent.ModalDialogType.DeleteCancel" OnEdit="OnEditDialog" />
+}
+
 
 @if (isEdit)
 {
@@ -90,6 +89,55 @@ else
 }
 
 @code {
+    @page "/books"
+    @using System.Net.Http
+    @using Data
+    @using WEB_API.Entities
+
+    //Book select
+    private int BooksSelectedCount = 0;
+    private List<Book> booksSelected = new List<Book>();
+    private void CheckboxClicked(Book item, ChangeEventArgs e)
+    {
+        if ((bool)e.Value)
+        {
+            booksSelected.Add(item);
+            BooksSelectedCount++;
+        }
+        else
+        {
+            booksSelected.Remove(item);
+            BooksSelectedCount--;
+        }
+    }
+
+    //Modal
+    public bool CloseDialog { get; set; }
+    private Book book { get; set; }
+
+    private void OnCloseDialog(bool accepted)
+    {
+        if (accepted)
+        {
+            DeleteBook(book.Id);
+        }
+        CloseDialog = false;
+        StateHasChanged();
+    }
+
+    private async void OnEditDialog(Book EditBook)
+    {
+        await BookService.UpdateBook(EditBook);
+    }
+    private void OpenDialog(Book item)
+    {
+        book = item;
+        book.Author = item.Author;
+        book.Description = item.Description;
+        CloseDialog = true;
+        StateHasChanged();
+    }
+
     private List<Book> books;
     private Book newBook = new Book();
     public bool isEdit = false;
@@ -101,14 +149,6 @@ else
     protected override async Task OnInitializedAsync()
     {
         books = await BookService.GetBooks();
-        //Console.WriteLine(books);
-    }
-
-    private async void HandleAddSubmit()
-    {
-        await BookService.CreateBook(newBook);
-        books = await BookService.GetBooks();
-        StateHasChanged();
     }
 
     private async void DeleteBook(int id)
@@ -122,7 +162,6 @@ else
     {
         isEdit = true;
         editBook = await BookService.GetBookById(id);
-
         StateHasChanged();
     }
 

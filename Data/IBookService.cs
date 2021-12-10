@@ -9,6 +9,7 @@ namespace Data
 {
     public interface IBookService
     {
+        event Action BooksChanged;
         Task<List<Book>> GetBooks();
         Task<Book> GetBookById(int id);
         Task<Book> CreateBook(Book book);

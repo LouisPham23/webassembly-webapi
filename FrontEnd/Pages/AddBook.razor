@@ -1,0 +1,38 @@
+﻿@page "/add-books"
+@using WEB_API.Entities
+@inject NavigationManager NavigationManager
+<div class="mt-4">
+    <h4>Add a book </h4>
+    <EditForm Model="@newBook" OnValidSubmit="@HandleAddSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <FieldComponent Label="Title">
+            <Control>
+                <InputText id="title" class="form-control" @bind-Value="newBook.Title" />
+            </Control>
+        </FieldComponent>
+        <FieldComponent Label="Description">
+            <Control>
+                <InputText id="description" class="form-control" @bind-Value="newBook.Description" />
+            </Control>
+        </FieldComponent>
+        <FieldComponent Label="Title">
+            <Control>
+                <InputText id="author" class="form-control" @bind-Value="newBook.Author" />
+            </Control>
+        </FieldComponent>
+        <button type="submit" class="btn btn-success">Submit</button>
+    </EditForm>
+</div>
+
+@code {
+    [Inject]
+    public IBookService BookService { get; set; }
+    private Book newBook = new Book();
+
+    private async void HandleAddSubmit()
+    {
+        await BookService.CreateBook(newBook);
+        NavigationManager.NavigateTo("/books");
+    }
+}

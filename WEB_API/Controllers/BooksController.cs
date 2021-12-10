@@ -24,7 +24,12 @@ namespace WEB_API.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBookById(int id)
         {
-            return Ok(await _bookService.GetBookById(id));
+            var bookFound = await _bookService.GetBookById(id);
+            if(bookFound == null)
+            {
+                return NotFound($"Book with Id = {id} not found");
+            }   
+            return Ok(bookFound);
         }
 
         [HttpPost]
